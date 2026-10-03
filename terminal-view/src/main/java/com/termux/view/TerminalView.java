@@ -445,6 +445,13 @@ public final class TerminalView extends View {
         return mEmulator == null ? 1 : mEmulator.mRows;
     }
 
+    /** Jump back to the bottom of the transcript, called when the user sends input. */
+    public void scrollToBottom() {
+        if (mTopRow == 0) return;
+        mTopRow = 0;
+        invalidate();
+    }
+
     @Override
     protected int computeVerticalScrollOffset() {
         return mEmulator == null ? 1 : mEmulator.getScreen().getActiveRows() + mTopRow - mEmulator.mRows;
@@ -460,7 +467,9 @@ public final class TerminalView extends View {
         int rowsInHistory = mEmulator.getScreen().getActiveTranscriptRows();
         if (mTopRow < -rowsInHistory) mTopRow = -rowsInHistory;
 
-        if (isSelectingText() || mEmulator.isAutoScrollDisabled()) {
+        // Stay where the user scrolled to instead of jumping to the bottom on new output.
+        // Only input jumps back down, see scrollToBottom().
+        if (isSelectingText() || mEmulator.isAutoScrollDisabled() || mTopRow != 0) {
 
             // Do not scroll when selecting text.
             int rowShift = mEmulator.getScrollCounter();
@@ -780,6 +789,7 @@ public final class TerminalView extends View {
         } else if (event.isSystem() && (!mClient.shouldBackButtonBeMappedToEscape() || keyCode != KeyEvent.KEYCODE_BACK)) {
             return super.onKeyDown(keyCode, event);
         } else if (event.getAction() == KeyEvent.ACTION_MULTIPLE && keyCode == KeyEvent.KEYCODE_UNKNOWN) {
+            scrollToBottom();
             mTermSession.write(event.getCharacters());
             return true;
         }
@@ -902,6 +912,7 @@ public final class TerminalView extends View {
             }
 
             // If left alt, send escape before the code point to make e.g. Alt+B and Alt+F work in readline:
+            scrollToBottom();
             mTermSession.writeCodePoint(altDown, codePoint);
         }
     }
@@ -918,6 +929,7 @@ public final class TerminalView extends View {
         TerminalEmulator term = mTermSession.getEmulator();
         String code = KeyHandler.getCode(keyCode, keyMod, term.isCursorKeysApplicationMode(), term.isKeypadApplicationMode());
         if (code == null) return false;
+        scrollToBottom();
         mTermSession.write(code);
         return true;
     }
