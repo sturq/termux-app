@@ -49,7 +49,7 @@ android {
         minSdk buildMinSdk
         targetSdk buildTargetSdk
         versionCode 1022
-        versionName "0.119.0-beta.3+sturq.1"
+        versionName "0.119.0-beta.3+sturq.2"
 
         if (appVersionName) versionName = appVersionName
         validateVersionName(versionName)
